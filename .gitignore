@@ -1,0 +1,14 @@
+/node_modules/
+/www/
+.env
+.env.*
+*.jks
+*.keystore
+*.p12
+keystore.properties
+signing.properties
+.DS_Store
+*.apk
+*.aab
+/android/.idea/
+/android/app/google-services.json

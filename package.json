@@ -1,0 +1,30 @@
+{
+  "name": "puzzle",
+  "version": "1.0.0",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs",
+    "android:sync": "npm run build:web && cap sync android",
+    "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug --stacktrace"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/b-behrouz/puzzle.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/b-behrouz/puzzle/issues"
+  },
+  "homepage": "https://github.com/b-behrouz/puzzle#readme",
+  "private": true,
+  "engines": {
+    "node": "24.22.1"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/core": "8.6.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.2"
+  }
+}
