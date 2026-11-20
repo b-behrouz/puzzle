@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+// Secrets are supplied by the local shell or the protected CI environment only.
+def releaseValues = [
+    ANDROID_KEYSTORE_PATH: System.getenv('ANDROID_KEYSTORE_PATH'),
+    ANDROID_KEYSTORE_PASSWORD: System.getenv('ANDROID_KEYSTORE_PASSWORD'),
+    ANDROID_KEY_ALIAS: System.getenv('ANDROID_KEY_ALIAS'),
+    ANDROID_KEY_PASSWORD: System.getenv('ANDROID_KEY_PASSWORD')
+]
+
 android {
     namespace = "com.example.puzzlepreview"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +24,34 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (releaseValues.ANDROID_KEYSTORE_PATH) {
+                storeFile rootProject.file(releaseValues.ANDROID_KEYSTORE_PATH)
+            }
+            storePassword releaseValues.ANDROID_KEYSTORE_PASSWORD
+            keyAlias releaseValues.ANDROID_KEY_ALIAS
+            keyPassword releaseValues.ANDROID_KEY_PASSWORD
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// Inspect the resolved graph so aggregate tasks (assemble/build) cannot bypass this.
+gradle.taskGraph.whenReady { graph ->
+    if (graph.allTasks.any { it.project == project && it.name.toLowerCase(java.util.Locale.ROOT).contains('release') }) {
+        def missing = releaseValues.findAll { name, value -> value == null || value.isEmpty() }.keySet()
+        if (!missing.isEmpty()) {
+            throw new GradleException('Release signing is required. Set environment variables: ' + missing.join(', '))
+        }
+        if (!android.signingConfigs.release.storeFile.isFile()) {
+            throw new GradleException('Release keystore was not found. Check ANDROID_KEYSTORE_PATH.')
         }
     }
 }
