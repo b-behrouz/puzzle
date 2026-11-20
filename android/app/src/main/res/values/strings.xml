@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">پازل</string>
-    <string name="title_activity_main">پازل</string>
-    <string name="package_name">com.example.puzzlepreview</string>
-    <string name="custom_url_scheme">com.example.puzzlepreview</string>
+    <string name="app_name">تکه‌چین</string>
+    <string name="title_activity_main">تکه‌چین</string>
+    <string name="package_name">ir.bbehrouz.tikechin</string>
+    <string name="custom_url_scheme">ir.bbehrouz.tikechin</string>
 </resources>

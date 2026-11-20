@@ -58,6 +58,7 @@ jobs:
         run: |
           python3 -m unittest discover -s scripts -p test_release_signing.py
           npm ci
+          npm test
           npm run android:sync
       - name: Sign, assemble and verify release
         shell: bash

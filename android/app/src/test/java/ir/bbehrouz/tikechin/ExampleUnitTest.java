@@ -1,4 +1,4 @@
-package com.getcapacitor.myapp;
+package ir.bbehrouz.tikechin;
 
 import static org.junit.Assert.*;
 
