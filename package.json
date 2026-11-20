@@ -1,7 +1,8 @@
 {
-  "name": "puzzle",
+  "name": "tikechin",
   "version": "1.0.0",
   "scripts": {
+    "test": "node --test scripts/test-game.mjs",
     "build:web": "node scripts/build-web.mjs",
     "android:sync": "npm run build:web && cap sync android",
     "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug --stacktrace"

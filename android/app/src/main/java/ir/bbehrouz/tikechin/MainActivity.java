@@ -1,4 +1,4 @@
-package com.example.puzzlepreview;
+package ir.bbehrouz.tikechin;
 
 import android.os.Bundle;
 import androidx.activity.OnBackPressedCallback;

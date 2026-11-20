@@ -2,6 +2,7 @@
 import base64
 import hashlib
 import importlib.util
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -45,16 +46,22 @@ class SigningGates(unittest.TestCase):
             'ANDROID_SIGNING_CERT_SHA256': self.pin,
         }
         self.signature = f'Verifies\nSigner #1 certificate SHA-256 digest: {self.pin}\n'
-        self.badging = "package: name='com.example.puzzlepreview' versionCode='1' versionName='1.0'\nsdkVersion:'24'\ntargetSdkVersion:'36'\n"
+        self.badging = "package: name='ir.bbehrouz.tikechin' versionCode='1' versionName='1.0'\nsdkVersion:'24'\ntargetSdkVersion:'36'\napplication-label:'تکه‌چین'\n"
 
-    def write_apk(self, game=None, extra=None):
+    def write_apk(self, game=None, extra=None, extra_data=b'forbidden fixture'):
         with zipfile.ZipFile(self.apk, 'w') as archive:
             archive.writestr('assets/public/index.html', self.game if game is None else game)
             if extra:
-                archive.writestr(extra, b'forbidden fixture')
+                archive.writestr(extra, extra_data)
 
     def verify_fixture(self, signature=None, badging=None):
         (self.root / 'puzzle-fantasy-mobile.html').write_bytes(self.game)
+        (self.root / 'capacitor.config.json').write_text(json.dumps({
+            'appId': 'ir.bbehrouz.tikechin', 'appName': 'تکه‌چین'
+        }), encoding='utf-8')
+        (self.root / 'android' / 'app').mkdir(parents=True, exist_ok=True)
+        (self.root / 'android' / 'app' / 'build.gradle').write_text(
+            'versionCode 1\nversionName "1.0"\n', encoding='utf-8')
         previous = Path.cwd()
         os.chdir(self.root)
         try:
@@ -121,7 +128,17 @@ class SigningGates(unittest.TestCase):
     def test_wrong_package_stops(self):
         self.write_apk()
         with self.assertRaises(SystemExit):
-            self.verify_fixture(badging=self.badging.replace('com.example.puzzlepreview', 'com.other.app'))
+            self.verify_fixture(badging=self.badging.replace('ir.bbehrouz.tikechin', 'com.other.app'))
+
+    def test_wrong_app_name_stops(self):
+        self.write_apk()
+        with self.assertRaises(SystemExit):
+            self.verify_fixture(badging=self.badging.replace("application-label:'تکه‌چین'", "application-label:'Other'"))
+
+    def test_wrong_version_stops(self):
+        self.write_apk()
+        with self.assertRaises(SystemExit):
+            self.verify_fixture(badging=self.badging.replace("versionCode='1'", "versionCode='2'"))
 
     def test_changed_game_stops(self):
         self.write_apk(game=b'changed game')
@@ -131,6 +148,18 @@ class SigningGates(unittest.TestCase):
 
     def test_private_key_in_apk_stops(self):
         self.write_apk(extra='assets/tikechin-release.jks')
+        with self.assertRaises(SystemExit):
+            self.verify_fixture()
+        self.assertFalse(self.output.exists())
+
+    def test_password_under_an_innocent_filename_stops(self):
+        self.write_apk(extra='assets/settings.txt', extra_data=self.env['ANDROID_KEY_PASSWORD'].encode('utf-8'))
+        with self.assertRaises(SystemExit):
+            self.verify_fixture()
+        self.assertFalse(self.output.exists())
+
+    def test_disguised_keystore_bytes_stop(self):
+        self.write_apk(extra='assets/settings.bin', extra_data=base64.b64decode(self.env['ANDROID_KEYSTORE_BASE64']))
         with self.assertRaises(SystemExit):
             self.verify_fixture()
         self.assertFalse(self.output.exists())
